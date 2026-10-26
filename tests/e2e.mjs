@@ -34,7 +34,7 @@ for (const [name, viewport] of [['phone', { width: 360, height: 740 }], ['small-
     page.on('pageerror', (e) => errors.push(e.message));
 
     await page.goto(base);
-    check(await page.locator('.template-card').count() === 10, `${name}: 10 templates on home`);
+    check(await page.locator('.template-card').count() === 11, `${name}: 11 templates on home`);
     if (shots) await page.screenshot({ path: `${shots}/${name}-home.png`, fullPage: true });
 
     await page.click('text=Deteriorating patient');
@@ -54,7 +54,7 @@ for (const [name, viewport] of [['phone', { width: 360, height: 740 }], ['small-
 
     // tapping a selected choice again clears it
     await page.click('[data-field="acvpu"] >> text=Confusion (new)');
-    check(/Partial score/.test(await page.textContent('#noteText')), `${name}: choice can be cleared`);
+    check(/At least/.test(await page.textContent('#noteText')), `${name}: choice can be cleared`);
     await page.click('[data-field="acvpu"] >> text=Confusion (new)');
 
     await page.fill('#f-situation', 'Spoke to Mrs Jones about her NHS number 943 476 5919');
@@ -83,7 +83,7 @@ for (const [name, viewport] of [['phone', { width: 360, height: 740 }], ['small-
     if (shots) await page.screenshot({ path: `${shots}/${name}-skin.png`, fullPage: true });
 
     // every template opens without errors and without horizontal scroll
-    for (const id of ['first-contact', 'nutrition', 'falls', 'comfort', 'cannula', 'catheter', 'handover', 'declined']) {
+    for (const id of ['first-contact', 'post-fall', 'nutrition', 'falls', 'comfort', 'cannula', 'catheter', 'handover', 'declined']) {
         await page.goto(base + '#t/' + id);
         await page.waitForSelector('.note-form');
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);

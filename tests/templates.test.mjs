@@ -27,7 +27,7 @@ test('every template is well formed', () => {
 
 test('the list Jake asked for is all there', () => {
     const ids = TEMPLATES.map((t) => t.id);
-    for (const id of ['first-contact', 'deteriorating', 'skin', 'nutrition', 'falls', 'comfort', 'cannula', 'catheter', 'handover', 'declined']) {
+    for (const id of ['first-contact', 'deteriorating', 'post-fall', 'skin', 'nutrition', 'falls', 'comfort', 'cannula', 'catheter', 'handover', 'declined']) {
         assert.ok(ids.includes(id), id);
     }
 });
@@ -99,4 +99,41 @@ test('hidden fields do not print', () => {
 test('multi-line free text is indented', () => {
     const f = { id: 'plan', type: 'textarea', label: 'Plan' };
     assert.deepEqual(fieldLines(f, { plan: 'one\ntwo' }), ['Plan:', '  one', '  two']);
+});
+
+test('paragraph format puts each section on one line', () => {
+    const t = TEMPLATES.find((x) => x.id === 'skin');
+    const v = { tool: 'Waterlow', score: '15', damage: [{ site: 'Sacrum', finding: 'Category 2' }], heels: true };
+    const { text } = renderNote(t, v, { format: 'paragraph' });
+    assert.match(text, /\nAssess risk: Risk tool: Waterlow; Score and risk category: 15\./);
+    assert.match(text, /\nSkin inspection: Areas of concern: Sacrum, Category 2\./);
+    assert.match(text, /\nSurface: Heels offloaded\./);
+});
+
+test('partial NEWS2 is never called low risk', () => {
+    const t = TEMPLATES.find((x) => x.id === 'deteriorating');
+    const f = t.sections[1].fields.find((x) => x.id === 'newsResult');
+    const r = f.compute({ rr: '16', hr: '80' });
+    assert.match(r.text, /^At least 0 \(2 of 7 parameters recorded/);
+    assert.doesNotMatch(r.text, /low/i);
+    const a = t.sections[1].fields.find((x) => x.id === 'newsAdvice').compute({ rr: '16', hr: '80' });
+    assert.doesNotMatch(a.text, /12 hours/);
+    const red = t.sections[1].fields.find((x) => x.id === 'newsAdvice').compute({ rr: '30' });
+    assert.match(red.text, /^Already at this level/);
+});
+
+test('per-parameter NEWS2 badges', () => {
+    const t = TEMPLATES.find((x) => x.id === 'deteriorating');
+    const byId = Object.fromEntries(t.sections[0].fields.map((f) => [f.id, f]));
+    assert.equal(byId.rr.score({ rr: '26' }), 3);
+    assert.equal(byId.rr.score({ rr: '' }), false);
+    assert.equal(byId.spo2.score({ spo2: '95', spo2scale: 'Scale 2', oxygen: 'Oxygen' }), 2);
+    assert.equal(byId.acvpu.score({ acvpu: 'Voice' }), 3);
+});
+
+test('post-fall head injury advice', () => {
+    const t = TEMPLATES.find((x) => x.id === 'post-fall');
+    const f = t.sections[1].fields.find((x) => x.id === 'headAdvice');
+    assert.equal(f.compute({ witnessed: 'Witnessed', injuries: ['None seen'] }), null);
+    assert.match(f.compute({ witnessed: 'Unwitnessed' }).text, /NG232/);
 });

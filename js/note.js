@@ -48,7 +48,7 @@ export function fieldLines(field, values) {
     }
 }
 
-// opts: { timeOfCare: 'yyyy-mm-ddThh:mm', role: 'RN' }
+// opts: { timeOfCare: 'yyyy-mm-ddThh:mm', role: 'RN', retrospective: bool, format: 'list' | 'paragraph' }
 export function renderNote(template, values, opts = {}) {
     const out = [`Nursing note: ${template.title}`];
     if (opts.timeOfCare) out.push(`Time of care: ${formatDateTime(opts.timeOfCare)}`);
@@ -59,8 +59,19 @@ export function renderNote(template, values, opts = {}) {
         const lines = section.fields.flatMap((f) => fieldLines(f, values));
         if (!lines.length) continue;
         body += lines.length;
-        out.push('', section.title);
-        for (const l of lines) out.push(l.startsWith('  ') ? l : `- ${l}`);
+        if (opts.format === 'paragraph') {
+            // One sentence-style line per section, for records that strip line breaks.
+            const parts = [];
+            for (const l of lines) {
+                const t = l.trim().replace(/^\* /, '');
+                if (l.startsWith('  ') && parts.length) parts[parts.length - 1] += (parts[parts.length - 1].endsWith(':') ? ' ' : ', ') + t;
+                else parts.push(t);
+            }
+            out.push('', `${section.title}: ${parts.map((x) => x.replace(/[.:]$/, '')).join('; ')}.`);
+        } else {
+            out.push('', section.title);
+            for (const l of lines) out.push(l.startsWith('  ') ? l : `- ${l}`);
+        }
     }
     if (opts.role) out.push('', `Recorded by: ${opts.role}`);
     return { text: out.join('\n'), empty: body === 0 };

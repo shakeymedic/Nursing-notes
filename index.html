@@ -9,29 +9,36 @@
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="icons/icon-192.png" type="image/png">
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="preload" href="fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="styles.css">
     <script src="theme-init.js"></script>
 </head>
 <body>
     <a class="skip" href="#main">Skip to content</a>
-    <header class="topbar">
-        <a class="brand" href="#" aria-label="Nursing Notes home">
-            <img src="https://raw.githubusercontent.com/shakeymedic/wmem/main/emevidence_logo.png" alt="" width="36" height="36">
-            <span>Nursing Notes</span>
-        </a>
-        <button type="button" id="themeBtn" class="icon-btn" aria-label="Switch dark mode">◐</button>
+    <header class="appbar">
+        <div class="appbar-inner">
+            <a class="brand" href="#" aria-label="Nursing Notes home">
+                <img src="https://raw.githubusercontent.com/shakeymedic/wmem/main/emevidence_logo.png" alt="" width="36" height="36">
+                <span class="brand-text"><strong>Nursing Notes</strong><small>Documentation aid</small></span>
+            </a>
+            <button type="button" id="themeBtn" class="icon-btn" aria-label="Switch dark mode"></button>
+        </div>
     </header>
 
     <div class="privacy-strip" role="note">
-        <strong>No patient details.</strong> Don't type names, NHS or hospital numbers, dates of birth or addresses. Nothing here is saved or sent: copy the note into your record.
+        <div class="privacy-inner">
+            <strong>No patient details.</strong> Don't type names, NHS or hospital numbers, dates of birth or addresses. Nothing here is saved or sent.
+        </div>
     </div>
 
     <main id="main" tabindex="-1"></main>
 
     <footer class="footer">
+        <div class="footer-inner">
         <p><strong>Educational aid.</strong> Nursing Notes helps you structure documentation. It does not replace your professional judgement, your organisation's policies or its record-keeping requirements. Check every note before you file it.</p>
         <p><a href="privacy.html">Privacy</a> · <a href="https://emevidence.org/" rel="noopener">EM Evidence</a> · West Midlands Evidence Based Emergency Medicine Ltd (company no. 16644703)</p>
         <p class="version">Version <span id="version"></span></p>
+        </div>
     </footer>
 
     <script type="module" src="js/app.js"></script>

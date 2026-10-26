@@ -13,7 +13,8 @@
 // Optional on any field: showIf(v), hint, unit, note (flag text), print: false
 
 import {
-    news2, news2Response, bmi, weightChangePercent, daysSince, formatDate, VIP
+    news2, news2Response, bmi, weightChangePercent, daysSince, formatDate, VIP,
+    rrPoints, spo2Scale1Points, spo2Scale2Points, sbpPoints, hrPoints, tempPoints
 } from './scores.js';
 
 const SOURCES = {
@@ -25,6 +26,7 @@ const SOURCES = {
     pu: { label: 'NHS England: Pressure ulcers - revised definition and measurement framework (2018)', url: 'https://www.england.nhs.uk/pressure-ulcers-revised-definition-and-measurement-framework/' },
     must: { label: "BAPEN: 'MUST' and the online MUST calculator", url: 'https://www.bapen.org.uk/must-and-self-screening/must-calculator/' },
     iddsi: { label: 'IDDSI framework (texture-modified food and thickened drinks)', url: 'https://www.iddsi.org/' },
+    headinjury: { label: 'NICE NG232: Head injury - assessment and early management (2023)', url: 'https://www.nice.org.uk/guidance/ng232' },
     falls: { label: 'NICE NG249: Falls - assessment and prevention in older people and in people 50 and over at higher risk (2025)', url: 'https://www.nice.org.uk/guidance/ng249' },
     vip: { label: 'Visual Infusion Phlebitis (VIP) score - Andrew Jackson', url: 'https://ivteam.com/intravenous-literature/infusion-phlebitis/the-importance-of-grading-infusion-phlebitis/' },
     mca: { label: 'Mental Capacity Act 2005 code of practice', url: 'https://www.gov.uk/government/publications/mental-capacity-act-code-of-practice' }
@@ -36,6 +38,7 @@ const PRESSURE_SITES = [
 ];
 
 const yes = (v, key) => v[key] === true || (Array.isArray(v[key]) && v[key].length > 0);
+const num = (x) => x !== undefined && x !== null && x !== '' && !Number.isNaN(Number(x));
 const includes = (v, key, option) => Array.isArray(v[key]) && v[key].includes(option);
 
 function news2From(v) {
@@ -52,7 +55,8 @@ export const TEMPLATES = [
         id: 'first-contact',
         title: 'First contact / admission',
         blurb: 'Meeting a patient for the first time on your shift or on arrival to the ward.',
-        icon: '👋',
+        icon: 'user-round-check',
+        group: 'Assessments',
         sources: ['nmc', 'hello'],
         sections: [
             {
@@ -145,26 +149,27 @@ export const TEMPLATES = [
         id: 'deteriorating',
         title: 'Deteriorating patient',
         blurb: 'Observations, NEWS2, your concerns, escalation (SBAR), response and plan.',
-        icon: '🚨',
+        icon: 'activity',
+        group: 'Acute care',
         sources: ['news2', 'martha', 'sepsis', 'nmc'],
         intro: 'NEWS2 is for adults (16 and over) and is not validated in pregnancy. Use your local paediatric or maternity chart for those patients. Your concern always counts, whatever the score.',
         sections: [
             {
                 title: 'Observations',
                 fields: [
-                    { id: 'rr', type: 'number', label: 'Respiratory rate', unit: '/min', min: 0, max: 80 },
-                    { id: 'spo2', type: 'number', label: 'SpO2', unit: '%', min: 50, max: 100 },
+                    { id: 'rr', type: 'number', label: 'Respiratory rate', unit: '/min', min: 0, max: 80, score: (v) => num(v.rr) && rrPoints(Number(v.rr)) },
+                    { id: 'spo2', type: 'number', label: 'SpO2', unit: '%', min: 50, max: 100, score: (v) => num(v.spo2) && (v.spo2scale === 'Scale 2' ? spo2Scale2Points(Number(v.spo2), v.oxygen === 'Oxygen') : spo2Scale1Points(Number(v.spo2))) },
                     { id: 'spo2scale', type: 'choice', label: 'SpO2 scale', options: ['Scale 1', 'Scale 2'], print: false,
                         hint: 'Scale 2 only when a clinician has set a target of 88-92% (e.g. hypercapnic respiratory failure).' },
-                    { id: 'oxygen', type: 'choice', label: 'Breathing', options: ['Air', 'Oxygen'], print: false },
+                    { id: 'oxygen', type: 'choice', label: 'Breathing', options: ['Air', 'Oxygen'], print: false, score: (v) => v.oxygen ? (v.oxygen === 'Oxygen' ? 2 : 0) : null },
                     { id: 'o2detail', type: 'text', label: 'Oxygen device and flow', hint: 'e.g. nasal cannulae 2 L/min', showIf: (v) => v.oxygen === 'Oxygen' },
-                    { id: 'sbp', type: 'number', label: 'Systolic BP', unit: 'mmHg', min: 30, max: 300 },
+                    { id: 'sbp', type: 'number', label: 'Systolic BP', unit: 'mmHg', min: 30, max: 300, score: (v) => num(v.sbp) && sbpPoints(Number(v.sbp)) },
                     { id: 'dbp', type: 'number', label: 'Diastolic BP', unit: 'mmHg', min: 10, max: 200, hint: 'Recorded but not scored in NEWS2.' },
-                    { id: 'hr', type: 'number', label: 'Heart rate', unit: '/min', min: 0, max: 250 },
+                    { id: 'hr', type: 'number', label: 'Heart rate', unit: '/min', min: 0, max: 250, score: (v) => num(v.hr) && hrPoints(Number(v.hr)) },
                     { id: 'acvpu', type: 'choice', label: 'Consciousness (ACVPU)', options: [
                         'Alert', 'Confusion (new)', 'Voice', 'Pain', 'Unresponsive'
-                    ] },
-                    { id: 'temp', type: 'number', label: 'Temperature', unit: '°C', step: '0.1', min: 25, max: 45 },
+                    ], score: (v) => v.acvpu ? (v.acvpu === 'Alert' ? 0 : 3) : null },
+                    { id: 'temp', type: 'number', label: 'Temperature', unit: '°C', step: '0.1', min: 25, max: 45, score: (v) => num(v.temp) && tempPoints(Number(v.temp)) },
                     { id: 'glucose', type: 'number', label: 'Capillary glucose', unit: 'mmol/L', step: '0.1' },
                     { id: 'pain', type: 'number', label: 'Pain score', unit: '/10', min: 0, max: 10 },
                     { id: 'otherObs', type: 'text', label: 'Other', hint: 'e.g. urine output, capillary refill' }
@@ -173,23 +178,26 @@ export const TEMPLATES = [
             {
                 title: 'NEWS2',
                 fields: [
-                    { id: 'newsResult', type: 'computed', label: 'NEWS2', compute: (v) => {
+                    { id: 'newsResult', type: 'computed', label: 'NEWS2', display: 'score', compute: (v) => {
                         const r = news2From(v);
                         if (r.parts.length === 0) return null;
                         const resp = news2Response(r.score, r.singleRed);
                         const breakdown = r.parts.map((p) => `${p.label}${p.value !== '' ? ' ' + p.value : ''} = ${p.points}`).join(', ');
                         if (!r.complete) {
-                            return { tone: r.score >= 7 ? 'red' : 'amber', text: `Partial score ${r.score} (missing ${r.missing.join(', ')}). ${breakdown}` };
+                            // RCP only defines a score from all seven parameters: never call a partial score low risk.
+                            return { tone: r.score >= 7 ? 'red' : 'amber', big: `≥${r.score}`, sub: `${r.parts.length} of 7 recorded`,
+                                text: `At least ${r.score} (${r.parts.length} of 7 parameters recorded; missing ${r.missing.join(', ')}). ${breakdown}` };
                         }
                         const tone = r.score >= 7 ? 'red' : (r.score >= 5 || r.singleRed) ? 'amber' : 'green';
-                        return { tone, text: `${r.score}, ${resp.level.toLowerCase()} clinical risk. ${breakdown}` };
+                        return { tone, big: String(r.score), sub: `${resp.level} clinical risk`, text: `${r.score}, ${resp.level.toLowerCase()} clinical risk. ${breakdown}` };
                     } },
                     { id: 'newsAdvice', type: 'advice', compute: (v) => {
                         const r = news2From(v);
-                        if (!r.complete) return null;
+                        if (!r.complete && !(r.score >= 5 || r.singleRed)) return r.parts.length ? { tone: 'neutral', text: 'Record all seven parameters to complete the NEWS2 score.' } : null;
                         const resp = news2Response(r.score, r.singleRed);
                         const tone = r.score >= 7 ? 'red' : (r.score >= 5 || r.singleRed) ? 'amber' : 'green';
-                        return { tone, text: `RCP response: ${resp.response} Monitoring: ${resp.monitoring.toLowerCase()}. Follow your local escalation policy.` };
+                        const early = r.complete ? '' : 'Already at this level before all observations are recorded. ';
+                        return { tone, text: `${early}RCP response: ${resp.response} Monitoring: ${resp.monitoring.toLowerCase()}. Follow your local escalation policy.` };
                     } },
                     { id: 'prevNews', type: 'number', label: 'Previous NEWS2', min: 0, max: 20 },
                     { id: 'trend', type: 'computed', label: 'Trend', compute: (v) => {
@@ -256,10 +264,82 @@ export const TEMPLATES = [
 
     // -----------------------------------------------------------------------------------------
     {
+        id: 'post-fall',
+        title: 'Post-fall check',
+        blurb: 'After a fall: injury checks, head injury, moving the patient, escalation.',
+        icon: 'triangle-alert',
+        group: 'Acute care',
+        sources: ['headinjury', 'falls', 'nmc'],
+        intro: "Follow your organisation's post-fall protocol, including checking for injury before the patient is moved.",
+        sections: [
+            {
+                title: 'The fall',
+                fields: [
+                    { id: 'fallTime', type: 'time', label: 'Time of fall (or when found)' },
+                    { id: 'witnessed', type: 'choice', label: 'Fall was', options: ['Witnessed', 'Unwitnessed', 'Reported by patient'] },
+                    { id: 'where', type: 'text', label: 'Where', hint: 'e.g. beside bed, bathroom' },
+                    { id: 'account', type: 'textarea', label: 'What happened', hint: "the patient's account, in their words if possible" }
+                ]
+            },
+            {
+                title: 'Checks before moving',
+                fields: [
+                    { id: 'checked', type: 'checks', label: 'Checked', selectAll: true, options: [
+                        'Airway, breathing and circulation', 'Level of consciousness', 'Signs of head injury',
+                        'Neck or back pain (possible spinal injury)', 'Signs of fracture (pain, shortening, rotation, deformity)',
+                        'Skin tears or bleeding'
+                    ] },
+                    { id: 'injuries', type: 'checks', label: 'Injuries found', options: [
+                        'None seen', 'Head injury', 'Possible fracture', 'Skin tear or wound', 'Bruising', 'New pain'
+                    ] },
+                    { id: 'injuryDetail', type: 'text', label: 'Injury details', showIf: (v) => Array.isArray(v.injuries) && v.injuries.some((x) => x !== 'None seen') },
+                    { id: 'moved', type: 'choice', label: 'Got up by', options: [
+                        'Getting up independently', 'Assisted to stand', 'Hoist', 'Flat-lifting equipment', 'Stayed on the floor until reviewed'
+                    ] },
+                    { id: 'anticoag', type: 'choice', label: 'Anticoagulant or antiplatelet', options: [
+                        'None', 'Aspirin only', 'Anticoagulant or other antiplatelet'
+                    ] },
+                    { id: 'headAdvice', type: 'advice', compute: (v) => (includes(v, 'injuries', 'Head injury') || v.witnessed === 'Unwitnessed')
+                        ? { tone: 'amber', text: 'Possible head injury (or unwitnessed fall): follow your local head injury protocol. For people admitted for head injury observation, NICE NG232 sets a minimum of half-hourly neurological observations until GCS 15; with GCS 15, half-hourly for 2 hours, then hourly for 4 hours, then 2-hourly.' } : null },
+                    { id: 'anticoagAdvice', type: 'advice', compute: (v) => v.anticoag === 'Anticoagulant or other antiplatelet'
+                        ? { tone: 'amber', text: 'Tell the medical team now: anticoagulant or antiplatelet treatment (other than aspirin alone) is a head injury risk factor in NICE NG232.' } : null }
+                ]
+            },
+            {
+                title: 'Observations after the fall',
+                fields: [
+                    { id: 'news', type: 'number', label: 'NEWS2', min: 0, max: 20 },
+                    { id: 'gcs', type: 'number', label: 'GCS', min: 3, max: 15, unit: '/15' },
+                    { id: 'pupils', type: 'text', label: 'Pupils', hint: 'e.g. equal and reactive' },
+                    { id: 'glucose', type: 'number', label: 'Capillary glucose', unit: 'mmol/L', step: '0.1' },
+                    { id: 'pain', type: 'number', label: 'Pain score', unit: '/10', min: 0, max: 10 },
+                    { id: 'neuro', type: 'flag', label: 'Neurological observations started', note: 'Neurological observations started.' }
+                ]
+            },
+            {
+                title: 'Escalation and follow-up',
+                fields: [
+                    { id: 'informed', type: 'checks', label: 'Informed', options: [
+                        'Nurse in charge', 'Medical team', 'Family or carer (with consent where possible)'
+                    ] },
+                    { id: 'reviewTime', type: 'time', label: 'Medical review at' },
+                    { id: 'followUp', type: 'checks', label: 'Done', options: [
+                        'Incident report completed', 'Falls care plan reviewed', 'Bed rails assessment reviewed',
+                        'Lying and standing BP planned', 'Medication review requested'
+                    ] },
+                    { id: 'plan', type: 'textarea', label: 'Plan' }
+                ]
+            }
+        ]
+    },
+
+    // -----------------------------------------------------------------------------------------
+    {
         id: 'skin',
         title: 'Skin check',
         blurb: 'Pressure areas and skin care, set out using aSSKINg.',
-        icon: '🩹',
+        icon: 'bandage',
+        group: 'Assessments',
         sources: ['pu', 'nmc'],
         intro: 'Record the risk score from the tool your organisation uses (for example Waterlow, Braden or PURPOSE T). This app does not calculate those scores.',
         sections: [
@@ -352,7 +432,8 @@ export const TEMPLATES = [
         id: 'nutrition',
         title: 'Nutrition check',
         blurb: 'Weight, BMI, weight change, MUST result, eating and drinking.',
-        icon: '🍽️',
+        icon: 'utensils',
+        group: 'Assessments',
         sources: ['must', 'iddsi', 'nmc'],
         intro: "Complete 'MUST' on your organisation's form or BAPEN's online calculator and record the result here. This app works out BMI and weight change to help, but does not score MUST.",
         sections: [
@@ -435,7 +516,8 @@ export const TEMPLATES = [
         id: 'falls',
         title: 'Falls check',
         blurb: 'Multifactorial falls check and safety measures, without a risk score.',
-        icon: '🦯',
+        icon: 'footprints',
+        group: 'Assessments',
         sources: ['falls', 'nmc'],
         intro: 'NICE NG249 (2025) advises against using falls risk prediction tools to predict falls. Instead, look for and act on each risk factor.',
         sections: [
@@ -489,7 +571,8 @@ export const TEMPLATES = [
         id: 'comfort',
         title: 'Comfort round',
         blurb: 'Intentional rounding: pain, position, personal needs, possessions.',
-        icon: '🛏️',
+        icon: 'bed-double',
+        group: 'Routine care',
         sources: ['nmc'],
         sections: [
             {
@@ -523,7 +606,8 @@ export const TEMPLATES = [
         id: 'cannula',
         title: 'Cannula check',
         blurb: 'Peripheral cannula site check with VIP score.',
-        icon: '💉',
+        icon: 'syringe',
+        group: 'Routine care',
         sources: ['vip', 'nmc'],
         intro: 'Check and score the site as often as your local policy says. Remove any cannula that is no longer needed.',
         sections: [
@@ -578,7 +662,8 @@ export const TEMPLATES = [
         id: 'catheter',
         title: 'Catheter care',
         blurb: 'Urinary catheter check: reason, care, output and plan.',
-        icon: '🫗',
+        icon: 'droplet',
+        group: 'Routine care',
         sources: ['nmc'],
         intro: 'Review every day whether the catheter is still needed.',
         sections: [
@@ -635,7 +720,8 @@ export const TEMPLATES = [
         id: 'handover',
         title: 'Handover (SBAR)',
         blurb: 'Structured handover summary for the record.',
-        icon: '🔁',
+        icon: 'arrow-left-right',
+        group: 'Communication',
         sources: ['nmc'],
         sections: [
             {
@@ -668,7 +754,8 @@ export const TEMPLATES = [
         id: 'declined',
         title: 'Declined care',
         blurb: 'When a patient declines care, treatment or observations.',
-        icon: '✋',
+        icon: 'hand',
+        group: 'Communication',
         sources: ['mca', 'nmc'],
         sections: [
             {

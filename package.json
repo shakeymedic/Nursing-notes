@@ -1,0 +1,11 @@
+{
+  "name": "nursing-notes",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Nursing Notes: structured nursing documentation aid (static PWA, no build)",
+  "scripts": {
+    "test": "node scripts/smoke-test.js && node --test tests/scores.test.mjs tests/templates.test.mjs",
+    "e2e": "node tests/e2e.mjs"
+  }
+}

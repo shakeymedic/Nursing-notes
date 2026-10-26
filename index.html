@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Nursing Notes</title>
+    <meta name="description" content="Educational aid that helps nurses write clear, structured notes for common tasks, ready to copy into the electronic record. Nothing you type is saved or sent.">
+    <meta name="theme-color" content="#005eb8">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/icon-192.png" type="image/png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="styles.css">
+    <script src="theme-init.js"></script>
+</head>
+<body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="topbar">
+        <a class="brand" href="#" aria-label="Nursing Notes home">
+            <img src="https://raw.githubusercontent.com/shakeymedic/wmem/main/emevidence_logo.png" alt="" width="36" height="36">
+            <span>Nursing Notes</span>
+        </a>
+        <button type="button" id="themeBtn" class="icon-btn" aria-label="Switch dark mode">◐</button>
+    </header>
+
+    <div class="privacy-strip" role="note">
+        <strong>No patient details.</strong> Don't type names, NHS or hospital numbers, dates of birth or addresses. Nothing here is saved or sent: copy the note into your record.
+    </div>
+
+    <main id="main" tabindex="-1"></main>
+
+    <footer class="footer">
+        <p><strong>Educational aid.</strong> Nursing Notes helps you structure documentation. It does not replace your professional judgement, your organisation's policies or its record-keeping requirements. Check every note before you file it.</p>
+        <p><a href="privacy.html">Privacy</a> · <a href="https://emevidence.org/" rel="noopener">EM Evidence</a> · West Midlands Evidence Based Emergency Medicine Ltd (company no. 16644703)</p>
+        <p class="version">Version <span id="version"></span></p>
+    </footer>
+
+    <script type="module" src="js/app.js"></script>
+    <script src="sw-register.js"></script>
+</body>
+</html>

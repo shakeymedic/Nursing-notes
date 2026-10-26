@@ -109,11 +109,13 @@ fieldset.card legend { font-weight: 700; font-size: 1.08rem; padding: 0 6px; mar
 .label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .hint { color: var(--muted); font-size: 0.88rem; display: block; margin: -2px 0 6px; }
 .row { display: flex; gap: 10px; align-items: flex-end; }
-.grow { flex: 1; }
+.grow { flex: 1; min-width: 0; }
+.row > .btn { flex: none; }
 
 input[type="text"], input[type="date"], input[type="time"], input[type="datetime-local"], select, textarea {
     font: inherit; color: var(--text); background: var(--card);
     border: 2px solid var(--border); border-radius: 8px; padding: 8px 10px; min-height: 44px; width: 100%;
+    min-width: 0; max-width: 100%;
 }
 textarea { resize: vertical; }
 .field.number input { max-width: 9rem; }

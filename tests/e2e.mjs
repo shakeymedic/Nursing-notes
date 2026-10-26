@@ -26,7 +26,7 @@ let failures = 0;
 const check = (ok, msg) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${msg}`); if (!ok) failures++; };
 
 const browser = await chromium.launch();
-for (const [name, viewport] of [['phone', { width: 360, height: 740 }], ['desktop', { width: 1280, height: 860 }]]) {
+for (const [name, viewport] of [['phone', { width: 360, height: 740 }], ['small-phone', { width: 320, height: 640 }], ['desktop', { width: 1280, height: 860 }]]) {
     const ctx = await browser.newContext({ viewport, permissions: ['clipboard-read', 'clipboard-write'] });
     const page = await ctx.newPage();
     const errors = [];
@@ -63,7 +63,7 @@ for (const [name, viewport] of [['phone', { width: 360, height: 740 }], ['deskto
     check(!(await page.isVisible('#idWarning')), `${name}: warning clears`);
     if (shots) await page.screenshot({ path: `${shots}/${name}-deteriorating.png`, fullPage: true });
 
-    const copyBtn = name === 'phone' ? '#copyBarBtn' : '#copyBtn';
+    const copyBtn = name.includes('phone') ? '#copyBarBtn' : '#copyBtn';
     await page.click(copyBtn);
     const clip = await page.evaluate(() => navigator.clipboard.readText());
     check(clip.startsWith('Nursing note: Deteriorating patient') && clip.includes('NEWS2 15'), `${name}: copy puts the note on the clipboard`);

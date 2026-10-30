@@ -1,6 +1,6 @@
 // sw.js - Nursing Notes offline support. Bump SW_VERSION on every release.
 // Only the app's own files are cached. The app never sends or stores patient details.
-const SW_VERSION = 'nn-v1.1.1';
+const SW_VERSION = 'nn-v1.1.2';
 const STATIC_ASSETS = [
     './',
     './index.html',

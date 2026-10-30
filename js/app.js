@@ -6,7 +6,7 @@ import { renderNote, freeText, isVisible } from './note.js';
 import { findIdentifiers } from './scores.js';
 import { icon } from './icons.js';
 
-export const VERSION = '1.1.1';
+export const VERSION = '1.1.2';
 
 const GROUPS = ['Acute care', 'Assessments', 'Routine care', 'Communication'];
 const main = document.getElementById('main');
